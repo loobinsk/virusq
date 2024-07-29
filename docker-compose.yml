@@ -1,0 +1,78 @@
+version: '3.9'
+name: virus_q_api
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - virus_q_api.postgres.network
+    depends_on:
+      - postgres
+    volumes:
+      - ./config.toml:/config.toml:ro
+    ports:
+      - "8000:8000"
+
+  redis:
+    image: redis:7.2.4-alpine
+    restart: "on-failure"
+    command: redis-server --stop-writes-on-bgsave-error no
+    networks:
+      - virus_q_api.redis.network
+    volumes:
+      - virus_q_api.redis.data:/data
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:16.3-alpine
+    restart: "unless-stopped"
+    shm_size: 1gb
+
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    networks:
+      - virus_q_api.postgres.network
+    volumes:
+      - virus_q_api.postgres.data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql.conf
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: "${POSTGRES_USER}"
+      DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      ADMIN_USERS: postgres,admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+
+  migrations:
+    command: "alembic upgrade head"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - virus_q_api.postgres.network
+    depends_on:
+      - postgres
+    volumes:
+      - ./alembic.ini:/alembic.ini:ro
+      - ./config.toml:/config.toml:ro
+      - ./migrations:/migrations
+
+
+volumes:
+  virus_q_api.postgres.data: { }
+  virus_q_api.redis.data: { }
+
+networks:
+  virus_q_api.postgres.network: { }
+  virus_q_api.redis.network: { }

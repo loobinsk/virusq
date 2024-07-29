@@ -1,0 +1,21 @@
+# IDEA files
+.vscode
+.idea
+
+# Venv
+.venv
+
+# Config file
+config.toml
+.env
+.env.*
+.env.docker_compose
+
+# Cache files
+*.pyc
+__pycache__/
+.mypy_cache/
+.ruff_cache
+
+# Wheels
+dist/

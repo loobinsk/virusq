@@ -1,0 +1,13 @@
+[postgres]
+dsn = "postgresql+asyncpg://user:password@host:5432/db"
+
+[app]
+telegram_bot_token = ""
+jwt_secret = ""
+bot_jwt_secret = ""
+db_encryption_secret_key = ""
+game_checksum_secret_key = ""
+
+[logging]
+level = "DEBUG"
+sentry_dsn = ""
